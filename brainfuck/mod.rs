@@ -7,19 +7,21 @@ use self::collections::smallintmap::SmallIntMap;
 
 priv struct Memory {
     mem: ~[u8],
-    memptr: int,
+    memptr: uint,
     codeptr: uint,
     cache: SmallIntMap<uint>
 }
 
 pub struct BrainfuckVM <'c> {
     code: &'c str,
+    length: uint
 }
 
 impl <'c> BrainfuckVM <'c> {
     pub fn new(code : &'c str) -> BrainfuckVM<'c> {
         BrainfuckVM { 
             code: code,
+            length: code.len()
         }
     }
 
@@ -28,7 +30,7 @@ impl <'c> BrainfuckVM <'c> {
             mem: ~[0],
             memptr: 0,
             codeptr: 0,
-            cache: SmallIntMap::new()
+            cache: SmallIntMap::new()//with_capacity(self.length/2)
         };
 
         if !self.eval(&mut state) {
@@ -39,7 +41,7 @@ impl <'c> BrainfuckVM <'c> {
     }
 
     fn eval(&self, state: &mut Memory) -> bool {
-        while (state.codeptr as uint) < (self.code.len()) {
+        while (state.codeptr as uint) < self.length {
             match self.code[state.codeptr] as char {
                 '>' => {
                     state.memptr += 1;
