@@ -2,22 +2,22 @@
 extern crate collections;
 
 use std::io;
-use self::collections::hashmap::HashMap;
+use self::collections::smallintmap::SmallIntMap;
 
 
 priv struct Memory {
     mem: ~[u8],
     memptr: int,
     codeptr: uint,
-    cache: HashMap<uint, uint>
+    cache: SmallIntMap<uint>
 }
 
-pub struct BrainfuckVM {
-    code: ~str,
+pub struct BrainfuckVM <'c> {
+    code: &'c str,
 }
 
-impl BrainfuckVM {
-    pub fn new(code : ~str) -> BrainfuckVM {
+impl <'c> BrainfuckVM <'c> {
+    pub fn new(code : &'c str) -> BrainfuckVM<'c> {
         BrainfuckVM { 
             code: code,
         }
@@ -28,7 +28,7 @@ impl BrainfuckVM {
             mem: ~[0],
             memptr: 0,
             codeptr: 0,
-            cache: HashMap::new()
+            cache: SmallIntMap::new()
         };
 
         if !self.eval(&mut state) {
@@ -77,7 +77,6 @@ impl BrainfuckVM {
 
 
                     let start = state.codeptr;
-
                     let mut depth = 0;
                     if state.mem[state.memptr] == 0 {
                         let found = match state.cache.find(&state.codeptr) {
