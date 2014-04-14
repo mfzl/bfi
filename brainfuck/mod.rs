@@ -2,31 +2,19 @@
 extern crate collections;
 
 use std::io;
-use self::collections::treemap::TreeMap;
+use self::collections::hashmap::HashMap;
 
 
 priv struct Memory {
     mem: ~[u8],
     memptr: int,
     codeptr: uint,
-    cache: TreeMap<int, Option<int>>
+    cache: HashMap<uint, uint>
 }
 
 pub struct BrainfuckVM {
     code: ~str,
 }
-
-enum Token {
-    Incr,
-    Decr, 
-    Right,
-    Left,
-    Read,
-    Write,
-    Open,
-    Close
-}
-
 
 impl BrainfuckVM {
     pub fn new(code : ~str) -> BrainfuckVM {
@@ -40,99 +28,122 @@ impl BrainfuckVM {
             mem: ~[0],
             memptr: 0,
             codeptr: 0,
-            cache: TreeMap::new()
+            cache: HashMap::new()
         };
 
-        while (state.codeptr as uint) < (self.code.len()) {
-            if !self.eval(&mut state, self.code[state.codeptr] as char) {
-                return false;
-            }
-        };
+        if !self.eval(&mut state) {
+            return false;
+        }
 
         return true;
     }
 
-    fn eval(&self, state: &mut Memory, c : char) -> bool {
-        match c {
-            '>' => {
-                state.memptr += 1;
-                if state.memptr as uint > state.mem.len()-1{
-                    state.mem.push(0);
-                }
-            },
-            '<' => {
-
-                if !(state.memptr as uint <= 0) {
-                    state.memptr -= 1;
-                }
-
-            },
-            '+' => {
-                state.mem[state.memptr] += 1;
-            },
-            '-' => {
-                state.mem[state.memptr] -= 1;
-            },
-            '.' => {
-                print!("{}", state.mem[state.memptr] as char);
-            },
-            ',' => {
-
-                let x = match io::stdin().read_byte() {
-                    Ok(b) => b,
-                    Err(_) =>  0 
-                };
-
-                state.mem[state.memptr] = x;
-
-            },
-            '[' => {
-
-                state.cache.insert(state.memptr, None);
-
-                let mut depth = 0;
-                if state.mem[state.memptr] == 0 {
-                    state.codeptr += 1;
-                    let mut currentChar = self.code[state.codeptr] as char;
-                    while depth > 0 || currentChar  != ']' {
-                        if currentChar == '[' {
-                            depth += 1;
-                        } else if currentChar == ']' {
-                            depth -= 1;
-                        }
-                        state.codeptr += 1;
-                        currentChar = self.code[state.codeptr] as char;
+    fn eval(&self, state: &mut Memory) -> bool {
+        while (state.codeptr as uint) < (self.code.len()) {
+            match self.code[state.codeptr] as char {
+                '>' => {
+                    state.memptr += 1;
+                    if state.memptr as uint > state.mem.len()-1{
+                        state.mem.push(0);
                     }
-                }
-            },
-            ']' => {
-                let mut depth = 0;
-                if state.mem[state.memptr] != 0 {
-                    state.codeptr -= 1;
-                    let mut currentChar = self.code[state.codeptr] as char;
-                    while depth > 0 || currentChar != '[' {
+                },
+                '<' => {
 
-                        if currentChar == ']' {
-                            depth += 1;
-                        } else if currentChar == '[' {
-                            depth -= 1;
-                        }
-                        state.codeptr -= 1;
-                        currentChar = self.code[state.codeptr] as char;
+                    if !(state.memptr as uint <= 0) {
+                        state.memptr -= 1;
                     }
+
+                },
+                '+' => {
+                    state.mem[state.memptr] += 1;
+                },
+                '-' => {
+                    state.mem[state.memptr] -= 1;
+                },
+                '.' => {
+                    print!("{}", state.mem[state.memptr] as char);
+                },
+                ',' => {
+
+                    let x = match io::stdin().read_byte() {
+                        Ok(b) => b,
+                        Err(_) =>  0 
+                    };
+
+                    state.mem[state.memptr] = x;
+
+                },
+                '[' => {
+
+
+                    let start = state.codeptr;
+
+                    let mut depth = 0;
+                    if state.mem[state.memptr] == 0 {
+                        let found = match state.cache.find(&state.codeptr) {
+                            Some(c) => *c,
+                            None => 0
+                        };  
+                        if found > 0 {
+                            state.codeptr = found;
+                        } else {
+                            state.codeptr += 1;
+                            let mut currentChar = self.code[state.codeptr] as char;
+                            while depth > 0 || currentChar  != ']' {
+                                if currentChar == '[' {
+                                    depth += 1;
+                                } else if currentChar == ']' {
+                                    depth -= 1;
+                                }
+                                state.codeptr += 1;
+                                currentChar = self.code[state.codeptr] as char;
+                            }
+                            state.cache.insert(start, state.codeptr);
+                        }
+                    }
+                },
+                ']' => {
+                    let start = state.codeptr;
+
+                    let mut depth = 0;
+
+                    if state.mem[state.memptr] != 0 {
+                        let found = match state.cache.find(&state.codeptr) {
+                            Some(c) => *c,
+                            None => 0
+                        };  
+
+                        if found > 0 {
+                            state.codeptr = found;
+                        } else {
+                            state.codeptr -= 1;
+                            let mut currentChar = self.code[state.codeptr] as char;
+                            while depth > 0 || currentChar != '[' {
+
+                                if currentChar == ']' {
+                                    depth += 1;
+                                } else if currentChar == '[' {
+                                    depth -= 1;
+                                }
+                                state.codeptr -= 1;
+                                currentChar = self.code[state.codeptr] as char;
+                            }
+                            state.cache.insert(start, state.codeptr);
+                        }
+                    }
+
+                },
+                _ => {
+                    // Ignore other characters
                 }
+            };
 
-            },
-            _ => {
-                // Ignore other characters
-            }
-        };
-
-
-        //print!("Character: [{}] ", c);
-        //print!("Memory: [{}]", state.mem);
-        //print!("Memory Pointer: {} [{}]\n", state.memptr, state.mem[state.memptr]);
-        state.codeptr += 1;
+            //print!("Character: [{}] ", self.code[state.codeptr]);
+            //print!("Memory: [{}]", state.mem);
+            //print!("Memory Pointer: {} [{}]", state.memptr, state.mem[state.memptr]);
+            //print!("Cache: {} \n", state.cache);
+            state.codeptr += 1;
+        }
         return true;
     }
 }
