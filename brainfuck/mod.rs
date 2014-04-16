@@ -13,13 +13,13 @@ priv struct Memory {
     cache: SmallIntMap<uint>
 }
 
-pub struct BrainfuckVM <'c> {
+pub struct BrainfuckVM {
     code: ~Vec<u8>,
     length: uint
 }
 
-impl <'c> BrainfuckVM <'c> {
-    pub fn new<T: Reader>(reader: &mut T) -> BrainfuckVM<'c> {
+impl BrainfuckVM {
+    pub fn new<T: Reader>(reader: &mut T) -> BrainfuckVM {
 
         let code = ~reader.read_to_end().ok().unwrap_or(Vec::new());
         let length = code.len().clone();
