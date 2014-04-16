@@ -1,6 +1,6 @@
 use brainfuck::BrainfuckVM;
 use std::os;
-use std::io::File;
+use std::io::{File, stdin};
 
 mod brainfuck;
 
@@ -17,7 +17,11 @@ fn main() {
     let file = args[1];
 
     //let mut reader = BufferedReader::new(File::open(&Path::new(file)));
-    let mut reader = File::open(&Path::new(file));
+    let mut reader : ~Reader = if file == ~"-" { 
+        ~stdin() as ~Reader
+    } else {
+        ~File::open(&Path::new(file)) as ~Reader
+    };
 
     let vm = BrainfuckVM::new(&mut reader); // print 24
     vm.run();
