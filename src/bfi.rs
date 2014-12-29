@@ -14,13 +14,13 @@ fn main() {
         return;
     }
 
-    let file = args[1];
+    let file = &args[1];
 
     //let mut reader = BufferedReader::new(File::open(&Path::new(file)));
-    let mut reader : ~Reader = if file == ~"-" { 
-        ~stdin() as ~Reader
+    let mut reader : Box<Reader> = if *file == "-" { 
+        box stdin() as  Box<Reader>
     } else {
-        ~File::open(&Path::new(file)) as ~Reader
+        box File::open(&Path::new(file)) as Box<Reader>
     };
 
     let vm = BrainfuckVM::new(&mut reader); // print 24

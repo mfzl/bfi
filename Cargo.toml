@@ -1,0 +1,10 @@
+[package]
+
+name = "BFI"
+version = "0.0.1"
+authors = ["Mohamedh Fazal <mohamedhfazal@gmail.com>"]
+
+[[bin]]
+
+name = "bfi"
+
