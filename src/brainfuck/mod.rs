@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 extern crate collections;
 
 use std::io;

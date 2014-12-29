@@ -8,7 +8,6 @@ fn main() {
 
     let args = os::args();
 
-
     if args.len() < 2 {
         print!("Usage: {} filename.bf\n", args[0]);
         return;
@@ -16,13 +15,11 @@ fn main() {
 
     let file = &args[1];
 
-    //let mut reader = BufferedReader::new(File::open(&Path::new(file)));
     let mut reader : Box<Reader> = if *file == "-" { 
-        box stdin() as  Box<Reader>
+        box stdin()
     } else {
-        box File::open(&Path::new(file)) as Box<Reader>
+        box File::open(&Path::new(file))
     };
 
-    let vm = BrainfuckVM::new(&mut reader); // print 24
-    vm.run();
+    BrainfuckVM::new(&mut reader).run(); // print 24
 }
