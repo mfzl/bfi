@@ -1,4 +1,4 @@
-BFI - BrainFudge Interpreter in rust
+BFI - BrainFudge Interpreter in Rust
 ====================================
 
 Small BFI I made to learn Rust. Code is not idiomatic, as this is my first
